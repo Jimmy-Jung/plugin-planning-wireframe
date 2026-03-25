@@ -33,20 +33,14 @@ GitHub: `https://github.com/Jimmy-Jung/plugin-planning-wireframe`
 
 설치 후 스킬이 자동으로 사용 가능해집니다.
 
-### Claude Desktop에서 설치
+### Claude Code에서 플러그인으로 설치
 
-MCP 설정 파일(`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS)에 추가:
+1. Claude Code 설정 열기
+2. Plugins 섹션으로 이동
+3. "Add from URL" 클릭
+4. GitHub URL 입력: `https://github.com/Jimmy-Jung/plugin-planning-wireframe`
 
-```json
-{
-  "mcpServers": {
-    "planning-wireframe": {
-      "command": "npx",
-      "args": ["-y", "@cursor/planning-wireframe-mcp"]
-    }
-  }
-}
-```
+설치 후 스킬이 자동으로 사용 가능해집니다.
 
 ### 수동 설치 (로컬 개발용)
 
@@ -84,15 +78,17 @@ python3 skills/planning-wireframe/scripts/validate_skill.py
 
 정상 설치라면 CLI 도움말이 출력되고, 스킬 구조 검증이 통과해야 합니다.
 
-## 플러그인 구조
+## 에이전트 연결 구조
 
-이 저장소는 Cursor 플러그인으로 동작하도록 설계되었습니다.
+이 저장소는 아래처럼 도구별 연결 파일과 실제 스킬 로직이 분리되어 있습니다.
 
-- `.cursor-plugin/plugin.json`: 플러그인 메타데이터
-- `skills/`: 에이전트가 사용할 스킬 정의
-- `scripts/`: Python CLI 실행 스크립트
+- `.cursor-plugin/plugin.json`: Cursor용 플러그인 메타데이터
+- `.cursor/rules/planning-wireframe.mdc`: Cursor 프로젝트 규칙
+- `CLAUDE.md`: Claude Code 프로젝트 메모리
+- `.claude/commands/planning-wireframe.md`: Claude Code 커스텀 커맨드
+- `skills/planning-wireframe/`: 스킬 문서, 템플릿, 상태 스키마, Python 스크립트
 
-플러그인 설치 시 에이전트가 자동으로 스킬을 인식하고 사용할 수 있습니다.
+즉, 에이전트는 연결 파일을 통해 워크플로우를 인식하고, 실제 실행은 `planning_runner.py`가 담당합니다.
 
 ## 스킬 사용법
 
@@ -227,8 +223,13 @@ python3 skills/planning-wireframe/scripts/planning_runner.py annotate <session-i
 
 ```text
 plugin-planning-wireframe/
+├── .claude/
+│   └── commands/
+├── .cursor/
+│   └── rules/
 ├── .cursor-plugin/
 │   └── plugin.json
+├── CLAUDE.md
 ├── skills/
 │   └── planning-wireframe/
 │       ├── SKILL.md
@@ -247,6 +248,10 @@ plugin-planning-wireframe/
 
 핵심 디렉터리 역할:
 
+- `.cursor-plugin/plugin.json`: Cursor 플러그인 메타데이터
+- `.cursor/rules/planning-wireframe.mdc`: Cursor 프로젝트 규칙
+- `CLAUDE.md`: Claude Code 프로젝트 메모리
+- `.claude/commands/planning-wireframe.md`: Claude Code 커스텀 슬래시 커맨드
 - `skills/planning-wireframe/SKILL.md`: 스킬 설명과 표준 사용 규칙
 - `skills/planning-wireframe/USAGE.md`: 실제 명령 예시
 - `skills/planning-wireframe/state-schema.md`: 세션 YAML 구조 설명
@@ -281,6 +286,12 @@ python3 skills/planning-wireframe/scripts/planning_runner.py <command>
 - `attach-screenshot`
 - `annotate`
 - `validate`
+
+도구별 역할:
+
+- Cursor는 `.cursor-plugin/plugin.json`과 `.cursor/rules/planning-wireframe.mdc`를 통해 워크플로우를 인식합니다.
+- Claude Code는 `CLAUDE.md`와 `.claude/commands/planning-wireframe.md`를 통해 같은 워크플로우를 읽습니다.
+- 실제 상태 변경, 문서 생성, 후처리는 모두 Python CLI가 수행합니다.
 
 ### 2. 질문 흐름은 코드로 고정
 

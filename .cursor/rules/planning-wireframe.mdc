@@ -1,0 +1,33 @@
+---
+description: Use the planning-wireframe workflow for product planning, screen definition, requirement capture, wireframe documentation, and Figma screenshot mapping tasks in this repository.
+alwaysApply: false
+---
+
+<!-- Author: JunyoungJung | Date: 2026-03-25 -->
+
+# Planning Wireframe Rule
+
+Use this rule when the task is about:
+
+- planning documents
+- screen inventories
+- policies, requirements, rules, testcases
+- wireframe documentation
+- Figma screenshot mapping
+
+Follow this workflow:
+
+1. Read `README.md`, `skills/planning-wireframe/SKILL.md`, `skills/planning-wireframe/USAGE.md`, and `skills/planning-wireframe/state-schema.md`.
+2. Use `python3 skills/planning-wireframe/scripts/planning_runner.py` as the main entrypoint.
+3. Check existing sessions with `list` or `status`.
+4. Create a new session with `init` when needed.
+5. Continue the interview flow with `next` and `answer`.
+6. Generate the final markdown document with `render-doc`.
+7. For Figma image work, use `figma-manifest`, then `attach-screenshot`, then `annotate`.
+
+Constraints:
+
+- Keep responses concise and clear.
+- Prefer Korean for user-facing explanations in this repository.
+- Do not describe this repository as a VS Code marketplace extension.
+- Treat it as a reusable workflow package composed of skill docs, rules, and a Python CLI runner.
