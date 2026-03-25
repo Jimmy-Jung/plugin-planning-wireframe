@@ -38,21 +38,34 @@ GitHub: `https://github.com/Jimmy-Jung/plugin-planning-wireframe`
 
 ## 설치 방법
 
-### Cursor에서 플러그인으로 설치
+### Cursor에서 로컬 플러그인으로 사용
 
-1. Cursor 설정 열기
-2. Plugins 섹션으로 이동
-3. "Add from URL" 클릭
-4. GitHub URL 입력: `https://github.com/Jimmy-Jung/plugin-planning-wireframe`
+이 저장소는 로컬 플러그인 패키지로 사용하는 것을 기준으로 합니다.
 
-설치 후 스킬이 자동으로 사용 가능해집니다.
+1. 저장소를 로컬에 클론합니다.
+2. Cursor에서 로컬 플러그인 또는 개발용 플러그인 추가 흐름을 엽니다.
+3. 플러그인 경로로 아래 디렉터리를 지정합니다.
+
+```text
+<plugin-root>
+```
+
+4. Cursor가 `.cursor-plugin/plugin.json`을 읽으면 플러그인으로 인식할 수 있습니다.
+
+예시:
+
+```text
+<plugin-root> = /path/to/plugin-planning-wireframe
+```
+
+즉, 원격 GitHub URL 설치보다 로컬 저장소 경로를 직접 지정하는 방식으로 사용하는 문서 기준입니다.
 
 ### Claude Code에서 플러그인 마켓플레이스로 설치
 
 1. Claude Code에서 마켓플레이스를 추가합니다.
 
 ```text
-/plugin marketplace add Jimmy-Jung/plugin-planning-wireframe
+/plugin marketplace add <plugin-root>
 ```
 
 2. 플러그인을 설치합니다.
@@ -64,6 +77,12 @@ GitHub: `https://github.com/Jimmy-Jung/plugin-planning-wireframe`
 3. 설치 후 `planning-wireframe` 스킬과 커맨드를 사용할 수 있습니다.
 
 즉, Claude Code에서도 `MCP`가 아니라 `플러그인 마켓플레이스` 방식으로 설치할 수 있습니다.
+
+예시:
+
+```text
+/plugin marketplace add /path/to/plugin-planning-wireframe
+```
 
 ### 수동 설치 (로컬 개발용)
 

@@ -1,5 +1,6 @@
 {
   "name": "planning-wireframe",
+  "version": "1.0.0",
   "description": "Interview-based planning document and wireframe workflow with structured questioning, markdown generation, and Figma screenshot mapping.",
   "author": {
     "name": "JunyoungJung",

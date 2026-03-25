@@ -1,17 +1,19 @@
 {
-  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "jimmy-jung-plugins",
-  "description": "Marketplace for Jimmy Jung's Claude Code plugins, including planning and wireframe documentation workflows.",
   "owner": {
     "name": "JunyoungJung",
     "email": "joony300@gmail.com"
+  },
+  "metadata": {
+    "description": "Marketplace for Jimmy Jung's Claude Code plugins, including planning and wireframe documentation workflows.",
+    "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "planning-wireframe",
       "description": "Interview-based planning document and wireframe workflow with structured questioning, markdown generation, and Figma screenshot mapping.",
       "source": "./",
-      "strict": false,
+      "strict": true,
       "skills": [
         "./skills/planning-wireframe"
       ]

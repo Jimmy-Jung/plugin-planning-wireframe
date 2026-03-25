@@ -1,3 +1,7 @@
+---
+description: Run the planning-wireframe interview and document generation workflow.
+---
+
 <!-- Author: JunyoungJung | Date: 2026-03-25 -->
 
 # Planning Wireframe 워크플로우 실행
