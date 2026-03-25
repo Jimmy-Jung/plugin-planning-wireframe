@@ -1,23 +1,28 @@
 # Planning Wireframe
 
-인터뷰 기반으로 구조화된 기획 문서와 와이어프레임 산출물을 만드는 `skill + Python CLI` 저장소입니다.
+인터뷰 기반으로 구조화된 기획 문서와 와이어프레임 산출물을 만드는 `skill + plugin metadata + Python CLI` 저장소입니다.
 
 GitHub: `https://github.com/Jimmy-Jung/plugin-planning-wireframe`
 
 ## 무엇을 하는 저장소인가
 
-이 저장소는 Cursor 및 Claude Code 플러그인 마켓플레이스용 스킬입니다.
+이 저장소는 Cursor 플러그인과 Claude Code 플러그인 마켓플레이스 양쪽을 겨냥한 `skill + plugin metadata + Python CLI` 저장소입니다.
 
 ### 스킬 구조
 
 - `skills/planning-wireframe/SKILL.md`: 스킬 정의 (YAML frontmatter + 워크플로우)
-- `skills/planning-wireframe/agents/openai.yaml`: UI 메타데이터
 - `skills/planning-wireframe/scripts/planning_runner.py`: 실제 실행을 담당하는 CLI 러너
+- `.cursor-plugin/plugin.json`: Cursor 플러그인 메타데이터
+- `.claude-plugin/marketplace.json`: Claude Code 마켓플레이스 메타데이터
+- `.claude-plugin/plugin.json`: Claude Code 플러그인 메타데이터
+- `commands/planning-wireframe.md`: Claude Code 플러그인 커맨드
 
 ### 마켓플레이스 준비 완료
 
 - ✅ SKILL.md with YAML frontmatter (name, description)
-- ✅ agents/openai.yaml for UI metadata
+- ✅ Claude Code marketplace metadata
+- ✅ Claude Code plugin metadata
+- ✅ Claude Code command
 - ✅ Scripts for execution
 - ✅ Templates and references
 - ✅ Validation passed
@@ -42,14 +47,23 @@ GitHub: `https://github.com/Jimmy-Jung/plugin-planning-wireframe`
 
 설치 후 스킬이 자동으로 사용 가능해집니다.
 
-### Claude Code에서 플러그인으로 설치
+### Claude Code에서 플러그인 마켓플레이스로 설치
 
-1. Claude Code 설정 열기
-2. Plugins 섹션으로 이동
-3. "Add from URL" 클릭
-4. GitHub URL 입력: `https://github.com/Jimmy-Jung/plugin-planning-wireframe`
+1. Claude Code에서 마켓플레이스를 추가합니다.
 
-설치 후 스킬이 자동으로 사용 가능해집니다.
+```text
+/plugin marketplace add Jimmy-Jung/plugin-planning-wireframe
+```
+
+2. 플러그인을 설치합니다.
+
+```text
+/plugin install planning-wireframe@jimmy-jung-plugins
+```
+
+3. 설치 후 `planning-wireframe` 스킬과 커맨드를 사용할 수 있습니다.
+
+즉, Claude Code에서도 `MCP`가 아니라 `플러그인 마켓플레이스` 방식으로 설치할 수 있습니다.
 
 ### 수동 설치 (로컬 개발용)
 
@@ -92,15 +106,19 @@ python3 skills/planning-wireframe/scripts/validate_skill.py
 이 저장소는 아래처럼 도구별 연결 파일과 실제 스킬 로직이 분리되어 있습니다.
 
 - `.cursor-plugin/plugin.json`: Cursor용 플러그인 메타데이터
+- `.claude-plugin/marketplace.json`: Claude Code 마켓플레이스 정의
+- `.claude-plugin/plugin.json`: Claude Code 플러그인 정의
 - `.cursor/rules/planning-wireframe.mdc`: Cursor 프로젝트 규칙
 - `CLAUDE.md`: Claude Code 프로젝트 메모리
-- `.claude/commands/planning-wireframe.md`: Claude Code 커스텀 커맨드
+- `.claude/commands/planning-wireframe.md`: 로컬 개발용 Claude Code 커맨드
+- `commands/planning-wireframe.md`: Claude Code 플러그인 커맨드
 - `skills/planning-wireframe/`: 스킬 문서, 템플릿, 상태 스키마, Python 스크립트
 
 정리하면:
 
 - Cursor는 `.cursor-plugin/plugin.json`을 포함한 플러그인 패키지 관점으로 설명할 수 있습니다.
-- Claude Code는 현재 이 저장소를 `플러그인 URL 설치`로 붙이는 구조가 아니라 `프로젝트 메모리 + 커맨드`로 읽는 구조입니다.
+- Claude Code는 `.claude-plugin/marketplace.json`을 통해 마켓플레이스로 등록하고, `planning-wireframe` 플러그인으로 설치할 수 있습니다.
+- 로컬 개발 중에는 `CLAUDE.md`와 `.claude/commands/`로 같은 워크플로우를 바로 테스트할 수 있습니다.
 - 실제 실행은 공통적으로 `planning_runner.py`가 담당합니다.
 
 ## 스킬 사용법
@@ -238,11 +256,15 @@ python3 skills/planning-wireframe/scripts/planning_runner.py annotate <session-i
 plugin-planning-wireframe/
 ├── .claude/
 │   └── commands/
+├── .claude-plugin/
+│   ├── marketplace.json
+│   └── plugin.json
 ├── .cursor/
 │   └── rules/
 ├── .cursor-plugin/
 │   └── plugin.json
 ├── CLAUDE.md
+├── commands/
 ├── skills/
 │   └── planning-wireframe/
 │       ├── SKILL.md
@@ -261,10 +283,13 @@ plugin-planning-wireframe/
 
 핵심 디렉터리 역할:
 
+- `.claude-plugin/marketplace.json`: Claude Code 마켓플레이스 정의
+- `.claude-plugin/plugin.json`: Claude Code 플러그인 정의
 - `.cursor-plugin/plugin.json`: Cursor 플러그인 메타데이터
 - `.cursor/rules/planning-wireframe.mdc`: Cursor 프로젝트 규칙
 - `CLAUDE.md`: Claude Code 프로젝트 메모리
-- `.claude/commands/planning-wireframe.md`: Claude Code 커스텀 슬래시 커맨드
+- `.claude/commands/planning-wireframe.md`: 로컬 개발용 Claude Code 커맨드
+- `commands/planning-wireframe.md`: Claude Code 플러그인 커맨드
 - `skills/planning-wireframe/SKILL.md`: 스킬 설명과 표준 사용 규칙
 - `skills/planning-wireframe/USAGE.md`: 실제 명령 예시
 - `skills/planning-wireframe/state-schema.md`: 세션 YAML 구조 설명
@@ -303,7 +328,8 @@ python3 skills/planning-wireframe/scripts/planning_runner.py <command>
 도구별 역할:
 
 - Cursor는 `.cursor-plugin/plugin.json`과 `.cursor/rules/planning-wireframe.mdc`를 통해 워크플로우를 인식합니다.
-- Claude Code는 `CLAUDE.md`와 `.claude/commands/planning-wireframe.md`를 통해 같은 워크플로우를 읽습니다.
+- Claude Code는 `.claude-plugin/marketplace.json`과 `.claude-plugin/plugin.json`을 통해 마켓플레이스/플러그인으로 설치할 수 있습니다.
+- Claude Code 로컬 개발 환경에서는 `CLAUDE.md`와 `.claude/commands/planning-wireframe.md`를 통해 같은 워크플로우를 바로 테스트할 수 있습니다.
 - 실제 상태 변경, 문서 생성, 후처리는 모두 Python CLI가 수행합니다.
 
 ### 2. 질문 흐름은 코드로 고정
