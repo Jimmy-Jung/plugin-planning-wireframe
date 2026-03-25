@@ -1,0 +1,7 @@
+interface:
+  display_name: "Planning Wireframe"
+  short_description: "구조화된 기획 문서와 와이어프레임 생성"
+  default_prompt: "Use $planning-wireframe to create a structured planning document with wireframes and requirements."
+
+policy:
+  allow_implicit_invocation: true

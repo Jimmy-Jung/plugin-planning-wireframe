@@ -6,12 +6,21 @@ GitHub: `https://github.com/Jimmy-Jung/plugin-planning-wireframe`
 
 ## 무엇을 하는 저장소인가
 
-이 저장소는 일반적인 VS Code 마켓플레이스 확장 프로그램이 아닙니다. 핵심은 아래 두 가지입니다.
+이 저장소는 Cursor 및 Claude Code 플러그인 마켓플레이스용 스킬입니다.
 
-- `skills/planning-wireframe/SKILL.md`: 에이전트가 따라야 할 스킬 정의
+### 스킬 구조
+
+- `skills/planning-wireframe/SKILL.md`: 스킬 정의 (YAML frontmatter + 워크플로우)
+- `skills/planning-wireframe/agents/openai.yaml`: UI 메타데이터
 - `skills/planning-wireframe/scripts/planning_runner.py`: 실제 실행을 담당하는 CLI 러너
 
-즉, 이 저장소는 "설치형 UI 플러그인"보다 "기획 문서 작성 워크플로우를 재사용 가능한 스킬과 스크립트로 묶은 저장소"에 가깝습니다.
+### 마켓플레이스 준비 완료
+
+- ✅ SKILL.md with YAML frontmatter (name, description)
+- ✅ agents/openai.yaml for UI metadata
+- ✅ Scripts for execution
+- ✅ Templates and references
+- ✅ Validation passed
 
 주요 기능:
 
@@ -88,7 +97,11 @@ python3 skills/planning-wireframe/scripts/validate_skill.py
 - `.claude/commands/planning-wireframe.md`: Claude Code 커스텀 커맨드
 - `skills/planning-wireframe/`: 스킬 문서, 템플릿, 상태 스키마, Python 스크립트
 
-즉, 에이전트는 연결 파일을 통해 워크플로우를 인식하고, 실제 실행은 `planning_runner.py`가 담당합니다.
+정리하면:
+
+- Cursor는 `.cursor-plugin/plugin.json`을 포함한 플러그인 패키지 관점으로 설명할 수 있습니다.
+- Claude Code는 현재 이 저장소를 `플러그인 URL 설치`로 붙이는 구조가 아니라 `프로젝트 메모리 + 커맨드`로 읽는 구조입니다.
+- 실제 실행은 공통적으로 `planning_runner.py`가 담당합니다.
 
 ## 스킬 사용법
 

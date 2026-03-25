@@ -1,3 +1,8 @@
+---
+name: planning-wireframe
+description: Interview-based planning document and wireframe generation skill. Guides users through structured questioning to collect requirements, screens, policies, and test cases, then generates professional documentation with Figma screenshot integration. Use when creating planning documents, product requirements, wireframes, screen definitions, or structured documentation workflows.
+---
+
 # Planning Wireframe 스킬
 
 > @-tracking: skills planning-wireframe
