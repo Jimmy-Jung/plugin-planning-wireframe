@@ -196,6 +196,12 @@ def save_session(state: dict[str, Any]) -> Path:
     return path
 
 
+def has_figma_targets(state: dict[str, Any]) -> bool:
+    """Figma 후속 작업 대상 화면이 있는지 반환합니다."""
+    normalized = ensure_defaults(state)
+    return any(screen.get("figma_url") for screen in normalized.get("screens", []))
+
+
 def update_progress(state: dict[str, Any], next_step: str) -> dict[str, Any]:
     """현재 진행 상태를 다음 단계로 갱신합니다."""
     normalized = ensure_defaults(state)

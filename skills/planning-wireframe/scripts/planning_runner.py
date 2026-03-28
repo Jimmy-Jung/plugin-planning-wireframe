@@ -25,6 +25,7 @@ from session_state import (
     clear_active_prompt,
     ensure_defaults,
     generate_session_id,
+    has_figma_targets,
     list_sessions,
     load_session,
     mark_document_sections_completed,
@@ -39,6 +40,7 @@ from validate_skill import main as validate_skill_main
 
 
 RUNNER_PATH = "skills/planning-wireframe/scripts/planning_runner.py"
+FIGMA_COMPLETED_STEP = "figma_completed"
 
 
 def load_required_session(session_id: str) -> dict:
@@ -49,6 +51,13 @@ def load_required_session(session_id: str) -> dict:
     if errors:
         raise ValueError(" / ".join(errors))
     return state
+
+
+def finalize_figma_phase(state: dict) -> dict:
+    """Figma 후속 작업을 완료 상태로 전환합니다."""
+    finalized = clear_active_prompt(state)
+    finalized["status"] = "completed"
+    return update_progress(finalized, FIGMA_COMPLETED_STEP)
 
 
 def command_list(_: argparse.Namespace) -> int:
@@ -99,10 +108,15 @@ def build_status_summary(state: dict) -> str:
     if state["progress"]["current_step"] == "document_generation":
         next_action = f"python3 {RUNNER_PATH} render-doc {state['session_id']}"
     elif state["progress"]["current_step"] == "review":
-        next_action = (
-            f"python3 {RUNNER_PATH} figma-manifest {state['session_id']} "
-            "또는 annotate 명령 실행"
-        )
+        if has_figma_targets(state):
+            next_action = (
+                f"python3 {RUNNER_PATH} figma-manifest {state['session_id']} "
+                f"또는 python3 {RUNNER_PATH} complete-figma {state['session_id']}"
+            )
+        else:
+            next_action = f"python3 {RUNNER_PATH} complete-figma {state['session_id']}"
+    elif state["progress"]["current_step"] == FIGMA_COMPLETED_STEP:
+        next_action = "-"
 
     lines = [
         f"session_id: {state['session_id']}",
@@ -126,18 +140,26 @@ def command_next(args: argparse.Namespace) -> int:
     state = load_required_session(args.session_id)
     current_step = state["progress"]["current_step"]
 
+    if current_step == FIGMA_COMPLETED_STEP:
+        print("모든 phase가 완료되었습니다.")
+        return 0
+
     if current_step == "document_generation":
         print("질문 수집이 완료되었습니다. 다음 명령으로 문서를 생성하세요.")
         print(f"python3 {RUNNER_PATH} render-doc {args.session_id}")
         return 0
 
     if current_step == "review":
-        print("문서 생성이 완료된 상태입니다.")
-        print(f"python3 {RUNNER_PATH} figma-manifest {args.session_id}")
-        print(
-            f"python3 {RUNNER_PATH} annotate {args.session_id} "
-            "--image-root 홈화면\\ 기획문서/이미지 --output-root 홈화면\\ 기획문서/이미지-주석-영역-한글"
-        )
+        if has_figma_targets(state):
+            print("문서 생성이 완료되었습니다. 이제 Figma 후속 작업을 진행하세요.")
+            print(f"python3 {RUNNER_PATH} figma-manifest {args.session_id}")
+            print(
+                f"python3 {RUNNER_PATH} annotate {args.session_id} "
+                "--image-root 홈화면\\ 기획문서/이미지 --output-root 홈화면\\ 기획문서/이미지-주석-영역-한글"
+            )
+        else:
+            print("Figma 대상 화면이 없습니다. 완료 처리만 하면 됩니다.")
+            print(f"python3 {RUNNER_PATH} complete-figma {args.session_id}")
         return 0
 
     prompt = get_prompt_payload(state)
@@ -205,8 +227,11 @@ def command_render_doc(args: argparse.Namespace) -> int:
 
     state["document"]["path"] = str(relative_output_path)
     state = mark_document_sections_completed(state)
-    state["status"] = "review"
-    state = update_progress(state, "review")
+    if has_figma_targets(state):
+        state["status"] = "review"
+        state = update_progress(state, "review")
+    else:
+        state = finalize_figma_phase(state)
     save_session(state)
 
     print(f"문서가 생성되었습니다: {relative_output_path}")
@@ -240,7 +265,17 @@ def command_annotate(args: argparse.Namespace) -> int:
         Path(args.image_root),
         Path(args.output_root),
     )
+    state = finalize_figma_phase(state)
+    save_session(state)
     print("주석 이미지 생성이 완료되었습니다.")
+    return 0
+
+
+def command_complete_figma(args: argparse.Namespace) -> int:
+    state = load_required_session(args.session_id)
+    state = finalize_figma_phase(state)
+    save_session(state)
+    print("Figma phase를 완료 처리했습니다.")
     return 0
 
 
@@ -293,6 +328,10 @@ def build_parser() -> argparse.ArgumentParser:
     annotate_parser.add_argument("--image-root", required=True)
     annotate_parser.add_argument("--output-root", required=True)
     annotate_parser.set_defaults(func=command_annotate)
+
+    complete_figma_parser = subparsers.add_parser("complete-figma", help="Figma phase 완료 처리")
+    complete_figma_parser.add_argument("session_id")
+    complete_figma_parser.set_defaults(func=command_complete_figma)
 
     validate_parser = subparsers.add_parser("validate", help="스킬 검증")
     validate_parser.set_defaults(func=command_validate)

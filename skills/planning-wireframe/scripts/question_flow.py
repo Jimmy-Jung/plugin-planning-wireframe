@@ -30,6 +30,7 @@ STEP_SEQUENCE = [
     "testcases",
     "document_generation",
     "review",
+    "figma_completed",
 ]
 PROMPT_IDS = {
     "meta": "meta_overview",
