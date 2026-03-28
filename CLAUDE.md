@@ -18,9 +18,11 @@
 ## 작업 원칙
 
 - 기획 문서, 화면 정의, 정책, 요구사항, 규칙, 테스트케이스, Figma 스크린샷 연동 요청이면 이 워크플로우를 우선 사용한다.
+- **복잡한 프로젝트는 SubAgent 워크플로우를 권장한다.**
 - 먼저 `list` 또는 `status`로 세션 존재 여부를 확인한다.
 - 세션이 없으면 `init`으로 생성한다.
-- 질문 흐름은 `next`와 `answer`를 반복한다.
+- **SubAgent 워크플로우**: `planning_orchestrator.py`로 phase별 독립 실행
+- **기본 워크플로우**: `next`와 `answer`를 반복하여 순차 실행
 - 문서 생성은 `render-doc`를 사용한다.
 - Figma 작업은 `figma-manifest` -> `attach-screenshot` -> `annotate` 순서로 처리한다.
 - Python 스크립트는 Figma MCP를 직접 호출하지 않는다.
@@ -28,13 +30,46 @@
 
 ## 표준 명령
 
+### 세션 관리
+
 ```bash
 python3 skills/planning-wireframe/scripts/planning_runner.py list
 python3 skills/planning-wireframe/scripts/planning_runner.py init
 python3 skills/planning-wireframe/scripts/planning_runner.py status <session-id>
+```
+
+### SubAgent 워크플로우 (권장)
+
+```bash
+# Phase별 진행 상태 확인
+python3 skills/planning-wireframe/scripts/planning_orchestrator.py status <session-id>
+
+# 특정 phase 실행 프롬프트 출력
+python3 skills/planning-wireframe/scripts/planning_orchestrator.py run <session-id> <phase>
+
+# Phase 완료 검증
+python3 skills/planning-wireframe/scripts/planning_orchestrator.py validate-phase <session-id> <phase>
+
+# 다음 phase 확인
+python3 skills/planning-wireframe/scripts/planning_orchestrator.py next-phase <session-id>
+
+# 전체 phase 자동 실행 가이드
+python3 skills/planning-wireframe/scripts/planning_orchestrator.py auto-run <session-id>
+```
+
+**Phase 종류**: basic, areas, requirements, rules, testcases, document, figma
+
+### 기본 워크플로우 (순차 실행)
+
+```bash
 python3 skills/planning-wireframe/scripts/planning_runner.py next <session-id>
 python3 skills/planning-wireframe/scripts/planning_runner.py answer <session-id> --text "..."
 python3 skills/planning-wireframe/scripts/planning_runner.py render-doc <session-id>
+```
+
+### Figma 처리
+
+```bash
 python3 skills/planning-wireframe/scripts/planning_runner.py figma-manifest <session-id>
 python3 skills/planning-wireframe/scripts/planning_runner.py attach-screenshot <session-id> --screen-name "..." --image-path "..."
 python3 skills/planning-wireframe/scripts/planning_runner.py annotate <session-id> --image-root "홈화면 기획문서/이미지" --output-root "홈화면 기획문서/이미지-주석-영역-한글"

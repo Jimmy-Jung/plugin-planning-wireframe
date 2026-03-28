@@ -16,6 +16,45 @@ description: Interview-based planning document and wireframe generation skill. G
 - 문서 생성은 `document_renderer.py`를 통해 수행합니다.
 - Figma 표준 경로는 `plugin-figma-figma/get_screenshot` 입니다.
 - Talk to Figma + WebSocket은 대안 경로로만 취급합니다.
+- **SubAgent 기반 워크플로우를 통해 context window 절약**
+
+## 워크플로우 선택
+
+### 기본 워크플로우 (순차 실행)
+
+단일 세션에서 모든 단계를 순차적으로 처리합니다. 간단한 프로젝트나 학습용으로 적합합니다.
+
+### SubAgent 워크플로우 (권장)
+
+각 phase를 독립적인 SubAgent로 실행하여 context window를 절약합니다. 복잡한 프로젝트나 긴 인터뷰에 적합합니다.
+
+**Phase 구조**:
+- `basic`: 메타데이터, 화면 목록, 공통 정책
+- `areas`: 영역 정의
+- `requirements`: 요구사항 작성
+- `rules`: 규칙 정리
+- `testcases`: 테스트케이스 작성
+- `document`: 문서 생성
+- `figma`: Figma 스크린샷 처리
+
+**오케스트레이터 명령**:
+
+```bash
+# Phase별 진행 상태 확인
+python3 skills/planning-wireframe/scripts/planning_orchestrator.py status {session_id}
+
+# 특정 phase 실행 (SubAgent 프롬프트 출력)
+python3 skills/planning-wireframe/scripts/planning_orchestrator.py run {session_id} {phase}
+
+# Phase 완료 검증
+python3 skills/planning-wireframe/scripts/planning_orchestrator.py validate-phase {session_id} {phase}
+
+# 다음 phase 확인
+python3 skills/planning-wireframe/scripts/planning_orchestrator.py next-phase {session_id}
+
+# 전체 phase 자동 실행 가이드
+python3 skills/planning-wireframe/scripts/planning_orchestrator.py auto-run {session_id}
+```
 
 ## 표준 명령
 
@@ -32,7 +71,7 @@ python3 skills/planning-wireframe/scripts/planning_runner.py annotate {session_i
 python3 skills/planning-wireframe/scripts/planning_runner.py validate
 ```
 
-## 실행 순서
+## 실행 순서 (기본 워크플로우)
 
 ### Phase 0. 세션 준비
 
@@ -143,6 +182,46 @@ python3 skills/planning-wireframe/scripts/validate_skill.py
 python3 skills/planning-wireframe/scripts/smoke_test.py
 ```
 
+## SubAgent 워크플로우 상세
+
+### Phase별 실행 방법
+
+각 phase는 `Task` tool을 사용하여 독립적인 SubAgent로 실행합니다.
+
+```python
+# 예시: basic phase 실행
+Task(
+    description="기본 정보 수집",
+    prompt="""
+    planning-2026-03-28-1304 세션의 basic phase를 완료하세요.
+    
+    1. 오케스트레이터로 phase 프롬프트 가져오기:
+       python3 skills/planning-wireframe/scripts/planning_orchestrator.py run planning-2026-03-28-1304 basic
+    
+    2. 출력된 프롬프트의 지시사항을 따라 작업 수행
+    
+    3. 완료 후 검증:
+       python3 skills/planning-wireframe/scripts/planning_orchestrator.py validate-phase planning-2026-03-28-1304 basic
+    """,
+    subagent_type="generalPurpose"
+)
+```
+
+### Phase 간 상태 공유
+
+모든 phase는 동일한 세션 YAML 파일을 공유합니다. 각 SubAgent는:
+1. 세션 상태를 로드
+2. 담당 phase의 작업 수행
+3. 상태를 저장
+4. 다음 phase로 자동 전환
+
+### 장점
+
+- **Context Window 절약**: 각 phase가 독립적인 context를 사용
+- **중단/재개**: 각 phase 완료 후 중단하고 나중에 재개 가능
+- **병렬 실험**: 여러 세션을 동시에 진행 가능
+- **검증**: Phase별 완료 검증으로 품질 보장
+
 ## 참고 파일
 
 - 템플릿: `skills/planning-wireframe/templates/기획-템플릿.md`
@@ -150,6 +229,7 @@ python3 skills/planning-wireframe/scripts/smoke_test.py
 - 경로 유틸: `skills/planning-wireframe/scripts/storage_paths.py`
 - 질문 흐름: `skills/planning-wireframe/scripts/question_flow.py`
 - 러너: `skills/planning-wireframe/scripts/planning_runner.py`
+- **오케스트레이터: `skills/planning-wireframe/scripts/planning_orchestrator.py`**
 - Figma 유틸: `skills/planning-wireframe/scripts/figma_utils.py`
 - 문서 렌더러: `skills/planning-wireframe/scripts/document_renderer.py`
 - 주석 생성기: `skills/planning-wireframe/scripts/generate_image_annotations.py`

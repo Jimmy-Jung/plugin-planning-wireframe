@@ -8,6 +8,19 @@ GitHub: `https://github.com/Jimmy-Jung/plugin-planning-wireframe`
 
 이 저장소는 Cursor 플러그인과 Claude Code 플러그인 마켓플레이스 양쪽을 겨냥한 `skill + plugin metadata + Python CLI` 저장소입니다.
 
+### 주요 특징
+
+- **인터뷰 기반 질문 흐름**: 9단계 구조화된 질문으로 기획 데이터 수집
+- **SubAgent 기반 워크플로우**: Context window 절약을 위한 phase별 독립 실행
+- **상태 기반 재개**: YAML 기반 세션 저장으로 중단/재개 가능
+- **Figma 통합**: 스크린샷 자동 다운로드 및 주석 이미지 생성
+- **문서 자동 생성**: 수집된 데이터를 기반으로 마크다운 문서 생성
+
+### 워크플로우 모드
+
+1. **기본 워크플로우**: 단일 세션에서 순차 실행 (간단한 프로젝트)
+2. **SubAgent 워크플로우**: Phase별 독립 실행 (복잡한 프로젝트, 권장)
+
 ### 스킬 구조
 
 - `skills/planning-wireframe/SKILL.md`: 스킬 정의 (YAML frontmatter + 워크플로우)
@@ -142,7 +155,110 @@ python3 skills/planning-wireframe/scripts/validate_skill.py
 
 ## 스킬 사용법
 
-### 전체 흐름
+### 워크플로우 선택
+
+Planning Wireframe은 두 가지 워크플로우를 제공합니다:
+
+#### 1. 기본 워크플로우 (순차 실행)
+
+단일 세션에서 모든 단계를 순차적으로 처리합니다.
+
+**적합한 경우**:
+- 간단한 프로젝트 (3-5개 화면)
+- 학습 및 테스트 목적
+- 빠른 프로토타이핑
+
+#### 2. SubAgent 워크플로우 (권장)
+
+각 phase를 독립적인 SubAgent로 실행하여 context window를 절약합니다.
+
+**적합한 경우**:
+- 복잡한 프로젝트 (5개 이상 화면)
+- 긴 인터뷰 세션
+- 프로덕션 품질 문서 생성
+
+**장점**:
+- Context window 최대 80% 절약
+- Phase별 중단/재개 가능
+- 독립적인 검증
+- 병렬 세션 처리 가능
+
+### 전체 흐름 (SubAgent 워크플로우)
+
+#### Phase 0: 세션 생성
+
+```bash
+python3 skills/planning-wireframe/scripts/planning_runner.py init \
+  --title "홈탭 기획" \
+  --author "홍길동"
+
+# 세션 ID 확인 (예: planning-2026-03-28-1304)
+python3 skills/planning-wireframe/scripts/planning_runner.py list
+```
+
+#### Phase 1-5: 데이터 수집 (SubAgent)
+
+각 phase를 독립적인 SubAgent로 실행합니다:
+
+```bash
+# Phase 진행 상태 확인
+python3 skills/planning-wireframe/scripts/planning_orchestrator.py status <session-id>
+
+# Phase별 실행 (에이전트가 Task tool로 호출)
+# - basic: 메타데이터, 화면, 정책
+# - areas: 영역 정의
+# - requirements: 요구사항
+# - rules: 규칙 정리
+# - testcases: 테스트케이스
+```
+
+**SubAgent 실행 예시**:
+
+```python
+# 에이전트가 Task tool 사용
+Task(
+    description="기본 정보 수집",
+    prompt="""
+    세션 <session-id>의 basic phase를 완료하세요.
+    
+    1. 프롬프트 가져오기:
+       python3 skills/planning-wireframe/scripts/planning_orchestrator.py run <session-id> basic
+    
+    2. 프롬프트 지시사항에 따라 질문/답변 진행
+    
+    3. 완료 후 검증:
+       python3 skills/planning-wireframe/scripts/planning_orchestrator.py validate-phase <session-id> basic
+    """,
+    subagent_type="generalPurpose"
+)
+```
+
+#### Phase 6: 문서 생성
+
+```bash
+python3 skills/planning-wireframe/scripts/planning_runner.py render-doc <session-id>
+```
+
+#### Phase 7: Figma 처리
+
+```bash
+# 1. Manifest 생성
+python3 skills/planning-wireframe/scripts/planning_runner.py figma-manifest <session-id>
+
+# 2. 스크린샷 다운로드 (에이전트가 Figma MCP 사용)
+
+# 3. 경로 연결
+python3 skills/planning-wireframe/scripts/planning_runner.py attach-screenshot <session-id> \
+  --screen-name "홈 메인 화면" \
+  --image-path "홈화면 기획문서/이미지/홈-메인-화면.png"
+
+# 4. 주석 이미지 생성
+python3 skills/planning-wireframe/scripts/planning_runner.py annotate <session-id> \
+  --image-root "홈화면 기획문서/이미지" \
+  --output-root "홈화면 기획문서/이미지-주석-영역-한글"
+```
+
+### 전체 흐름 (기본 워크플로우)
 
 표준 흐름은 아래 순서입니다.
 
@@ -387,6 +503,7 @@ python3 skills/planning-wireframe/scripts/planning_runner.py <command>
 ## 주요 스크립트
 
 - `planning_runner.py`: 공개 CLI 엔트리포인트
+- **`planning_orchestrator.py`: SubAgent 워크플로우 오케스트레이터**
 - `question_flow.py`: 단계별 질문, 파서, 완료 판정
 - `session_state.py`: 세션 상태 생성/저장/로드/검증
 - `storage_paths.py`: 런타임 경로 유틸리티
